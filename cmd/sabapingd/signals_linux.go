@@ -49,6 +49,8 @@ func trapSignals() {
 					continue
 				}
 
+				srvsMu.Lock()
+
 				var (
 					oldCollectorID []string
 					newCollectorID []string
@@ -101,6 +103,8 @@ func trapSignals() {
 						}()
 					}
 				}
+
+				srvsMu.Unlock()
 
 				// if err == nil {
 				// 	diff := cmp.Diff(conf, newConf, cmp.Comparer(func(x, y *regexp.Regexp) bool {

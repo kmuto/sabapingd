@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,8 +32,9 @@ type serveAndShutdown interface {
 }
 
 var (
-	srvs []serveAndShutdown
-	conf *config.Config
+	srvsMu sync.Mutex
+	srvs   []serveAndShutdown
+	conf   *config.Config
 
 	configFilename string
 
@@ -175,8 +177,12 @@ func shutdown() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
+	srvsMu.Lock()
+	snapshot := slices.Clone(srvs)
+	srvsMu.Unlock()
+
 	var wg sync.WaitGroup
-	for _, s := range srvs {
+	for _, s := range snapshot {
 		wg.Add(1)
 		go func(ctx context.Context, s serveAndShutdown) {
 			defer wg.Done()
